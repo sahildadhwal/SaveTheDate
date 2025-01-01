@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Save the Date Creator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cormorant Garamond', serif;
+            padding: 40px;
+            background: #f8f8f8;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .image-preview-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+            flex-wrap: wrap;
+        }
+
+        .preview-box {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            transition: transform 0.2s;
+        }
+
+        .preview-box:hover {
+            transform: scale(1.05);
+        }
+
+        .preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preview-box.selected img {
+            border: 2px solid #c19a6b;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: none;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            -webkit-appearance: none;
+            z-index: 2;
+        }
+
+        .preview-box:hover .delete-btn {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .preview-box .delete-btn {
+                display: block;
+            }
+        }
+
+        .upload-btn {
+            width: 120px;
+            height: 120px;
+            border: 2px dashed #c19a6b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background: #fff;
+            border-radius: 4px;
+            font-size: 24px;
+            color: #c19a6b;
+            transition: all 0.3s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .upload-btn:hover {
+            background: #fff9f2;
+        }
+
+        #imageUpload {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+            visibility: hidden;
+        }
+
+        .input-section {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .input-section input {
+            padding: 12px 20px;
+            border: 1px solid #e1e1e1;
+            border-radius: 4px;
+            width: 240px;
+            text-align: center;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            background: white;
+            transition: border-color 0.3s;
+            -webkit-appearance: none;
+        }
+
+        .input-section input:focus {
+            outline: none;
+            border-color: #c19a6b;
+        }
+
+        .save-the-date {
+            text-align: center;
+            padding: 60px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 25px rgba(0,0,0,0.08);
+        }
+
+        .save-the-date h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 54px;
+            margin-bottom: 20px;
+            color: #c19a6b;
+            font-weight: normal;
+        }
+
+        .save-the-date h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-weight: 600;
+            letter-spacing: 2px;
+        }
+
+        .date-location {
+            font-size: 24px;
+            margin-bottom: 40px;
+            color: #2c3e50;
+        }
+
+        .main-image {
+            width: 100%;
+            max-width: 800px;
+            height: 500px;
+            margin: 0 auto;
+            background: #f9f9f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .main-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .ornament {
+            font-size: 24px;
+            color: #c19a6b;
+            margin: 20px 0;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #fde8e8;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #c19a6b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+            }
+
+            .save-the-date {
+                padding: 30px;
+            }
+
+            .main-image {
+                height: 300px;
+            }
+
+            .input-section input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    <div class="container">
+        <div class="error-message" id="errorMessage"></div>
+        <div class="image-preview-container" id="previewContainer">
+            <label class="upload-btn" for="imageUpload">
+                +
+            </label>
+            <input type="file" id="imageUpload" accept="image/*" multiple>
+        </div>
+
+        <div class="input-section">
+            <input type="text" id="brideName" placeholder="Bride's Name" value="BRIDE">
+            <input type="text" id="groomName" placeholder="Groom's Name" value="GROOM">
+        </div>
+
+        <div class="input-section">
+            <input type="date" id="weddingDate" placeholder="Wedding Date">
+            <input type="text" id="location" placeholder="Location">
+        </div>
+
+        <div class="save-the-date">
+            <h1>Save the Date</h1>
+            <div class="ornament">✦</div>
+            <h2><span id="brideText">BRIDE</span> & <span id="groomText">GROOM</span></h2>
+            <div class="date-location">
+                <div id="dateText">Please select a date</div>
+                <div id="locationText">Please enter a location</div>
+            </div>
+            <div class="main-image" id="mainImage">
+                <span>Select an image above</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageUpload = document.getElementById('imageUpload');
+            const previewContainer = document.getElementById('previewContainer');
+            const mainImage = document.getElementById('mainImage');
+            const brideName = document.getElementById('brideName');
+            const groomName = document.getElementById('groomName');
+            const weddingDate = document.getElementById('weddingDate');
+            const location = document.getElementById('location');
+            const brideText = document.getElementById('brideText');
+            const groomText = document.getElementById('groomText');
+            const dateText = document.getElementById('dateText');
+            const locationText = document.getElementById('locationText');
+            const errorMessage = document.getElementById('errorMessage');
+            const loadingOverlay = document.querySelector('.loading-overlay');
+
+            let images = [];
+            let selectedImage = null;
+
+            function formatDate(date) {
+                if (!date) return '';
+                const d = new Date(date);
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+                return d.toLocaleDateString('en-US', options);
+            }
+
+            function showLoading() {
+                loadingOverlay.style.display = 'flex';
+            }
+
+            function hideLoading() {
+                loadingOverlay.style.display = 'none';
+            }
+
+            function showError(message) {
+                console.error(message);
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 5000);
+            }
+
+            async function handleImageOrientation(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement('canvas');
+                            const ctx = canvas.getContext('2d');
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas.toDataURL('image/jpeg', 0.8));
+                        };
+                        img.onerror = reject;
+                        img.src = e.target.result;
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            imageUpload.addEventListener('change', async function(e) {
+                console.log('File input change event triggered');
+                
+                if (!e.target.files || e.target.files.length === 0) {
+                    showError('No files selected');
+                    return;
+                }
+
+                const files = Array.from(e.target.files);
+                const remainingSlots = 5 - images.length;
+
+                if (files.length > remainingSlots) {
+                    showError(`You can only add ${remainingSlots} more image${remainingSlots === 1 ? '' : 's'}`);
+                    return;
+                }
+
+                showLoading();
+
+                try {
+                    for (const file of files) {
+                        console.log('Processing file:', file.name, 'Size:', file.size, 'Type:', file.type);
+                        
+                        if (!file.type.startsWith('image/')) {
+                            showError(`File ${file.name} is not an image`);
+                            continue;
+                        }
+
+                        const processedImage = await handleImageOrientation(file);
+                        addImagePreview(processedImage);
+                    }
+                } catch (error) {
+                    console.error('Error processing images:', error);
+                    showError('Error processing images. Please try again.');
+                } finally {
+                    hideLoading();
+                    imageUpload.value = '';
+                }
+            });
+
+            function addImagePreview(src) {
+                if (!src) {
+                    showError('No image source provided');
+                    return;
+                }
+
+                try {
+                    console.log('Adding preview for image');
+                    images.push(src);
+                    
+                    const previewBox = document.createElement('div');
+                    previewBox.className = 'preview-box';
+                    
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.addEventListener('error', function() {
+                        showError('Error loading image preview');
+                        previewBox.remove();
+                        images = images.filter(i => i !== src);
+                    });
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '×';
+                    
+                    previewBox.appendChild(img);
+                    previewBox.appendChild(deleteBtn);
+                    
+                    const uploadLabel = previewContainer.querySelector('.upload-btn');
+                    if (uploadLabel) {
+                        previewContainer.insertBefore(previewBox, uploadLabel);
+                    } else {
+                        previewContainer.appendChild(previewBox);
+                    }
+
+                    if (!selectedImage) {
+                        selectImage(src, previewBox);
+                    }
+
+                    img.onclick = () => selectImage(src, previewBox);
+                    deleteBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        deleteImage(src, previewBox);
+                    }
+                } catch (error) {
+                    console.error('Error adding image preview:', error);
+                    showError('Error adding image preview. Please try again.');
+                }
+            }
+
+            function selectImage(src, box) {
+                try {
+                    console.log('Selecting image');
+                    selectedImage = src;
+                    document.querySelectorAll('.preview-box').forEach(box => box.classList.remove('selected'));
+                    box.classList.add('selected');
+                    mainImage.innerHTML = `<img src="${src}" alt="Selected image">`;
+                } catch (error) {
+                    console.error('Error selecting image:', error);
+                    showError('Error selecting image. Please try again.');
+                }
+            }
+
+// 
+            function deleteImage(src, box) {
+                try {
+                    console.log('Deleting image');
+                    images = images.filter(img => img !== src);
+                    box.remove();
+                    
+                    if (selectedImage === src) {
+                        selectedImage = images[0] || null;
+                        if (selectedImage) {
+                            const firstBox = document.querySelector('.preview-box');
+                            selectImage(selectedImage, firstBox);
+                        } else {
+                            mainImage.innerHTML = '<span>Select an image above</span>';
+                        }
+                    }
+
+                    // Show upload button if we're below the limit
+                    const uploadBtn = previewContainer.querySelector('.upload-btn');
+                    if (images.length < 5 && !uploadBtn) {
+                        const label = document.createElement('label');
+                        label.className = 'upload-btn';
+                        label.setAttribute('for', 'imageUpload');
+                        label.innerHTML = '+';
+                        previewContainer.appendChild(label);
+                    }
+                } catch (error) {
+                    console.error('Error deleting image:', error);
+                    showError('Error deleting image. Please try again.');
+                }
+            }
+
+            brideName.addEventListener('input', function(e) {
+                brideText.textContent = e.target.value.toUpperCase();
+            });
+
+            groomName.addEventListener('input', function(e) {
+                groomText.textContent = e.target.value.toUpperCase();
+            });
+
+            console.log('Save the Date Creator initialized');
+        });
+    </script>
+</body>
+</html>
